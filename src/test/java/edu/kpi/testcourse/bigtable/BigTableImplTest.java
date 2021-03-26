@@ -9,6 +9,7 @@ import edu.kpi.testcourse.rest.UsersController;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Random;
 import javax.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
@@ -35,38 +36,38 @@ class BigTableImplTest {
     assertThat(getUser).isEqualTo(userObject);
   }
 
-  private String genData(@NotNull String dataType){
+  private String genData(@NotNull String dataType) {
     final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     SecureRandom rnd = new SecureRandom();
     int length = new Random().ints(8, 16).findAny().orElse(0);
 
     StringBuilder sb = new StringBuilder();
 
-    if (dataType.equals("email")){
-      int atRange = new Random().ints(2, length-3).findAny().orElse(0);
-      int dotRange = new Random().ints(atRange + 2, length-1).findAny().orElse(0);
+    if (dataType.equals("email")) {
+      int atRange = new Random().ints(2, length - 3).findAny().orElse(0);
+      int dotRange = new Random().ints(atRange + 2, length - 1).findAny().orElse(0);
 
-      for(int i = 0; i < length; i++){
+      for (int i = 0; i < length; i++) {
         if (i == atRange) {
           sb.append("@");
-        } else if (i == dotRange){
+        } else if (i == dotRange) {
           sb.append(".");
         } else {
           sb.append(AB.charAt(rnd.nextInt(AB.length())));
         }
       }
-    } else if (dataType.equals("password")){
+    } else if (dataType.equals("password")) {
 
-      for(int i = 0; i < length; i++)
-          sb.append(AB.charAt(rnd.nextInt(AB.length())));
-      }
-
+      for (int i = 0; i < length; i++)
+        sb.append(AB.charAt(rnd.nextInt(AB.length())));
+    }
 
     return sb.toString();
   }
 
   @Test
   void checkCreation() throws ParseException {
+
     UsersController u = new UsersController();
     JSONParser parser = new JSONParser();
     String email = genData("email");
@@ -82,3 +83,11 @@ class BigTableImplTest {
     assertThat(answer.toString()).isEqualTo(HttpResponse.status(HttpStatus.CREATED).toString());
   }
 }
+/*  @Test
+  void checkAuthorization() throws ParseException {
+    checkCreation();
+
+    HttpResponse<?> answer = u.signUp(json);
+    assertThat(answer.toString()).isEqualTo(HttpResponse.status(HttpStatus.CREATED).toString());
+  }
+}*/
