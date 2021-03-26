@@ -2,6 +2,7 @@ package edu.kpi.testcourse.bigtable;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jose.shaded.json.parser.JSONParser;
 import com.nimbusds.jose.shaded.json.parser.ParseException;
@@ -9,7 +10,6 @@ import edu.kpi.testcourse.rest.UsersController;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Random;
 import javax.validation.constraints.NotNull;
 import org.junit.jupiter.api.Test;
@@ -66,8 +66,7 @@ class BigTableImplTest {
   }
 
   @Test
-  void checkCreation() throws ParseException {
-
+  void checkCreationOfUser() throws ParseException {
     UsersController u = new UsersController();
     JSONParser parser = new JSONParser();
     String email = genData("email");
@@ -82,12 +81,26 @@ class BigTableImplTest {
     HttpResponse<?> answer = u.signUp(json);
     assertThat(answer.toString()).isEqualTo(HttpResponse.status(HttpStatus.CREATED).toString());
   }
-}
-/*  @Test
-  void checkAuthorization() throws ParseException {
-    checkCreation();
 
-    HttpResponse<?> answer = u.signUp(json);
-    assertThat(answer.toString()).isEqualTo(HttpResponse.status(HttpStatus.CREATED).toString());
+  @Test
+  void checkDeletionOfUrl() {
+    BigTableImpl bigTable = new BigTableImpl();
+    String email = genData("email");
+    String password = genData("password");
+    String url = genData("link");
+    String shorturl = genData("link");
+
+    JsonObject userObject = new JsonObject();
+    userObject.addProperty("email", email);
+    userObject.addProperty("password", password);
+    userObject.add("userLinks", new JsonArray());
+    bigTable.saveUserInDb("testKey", userObject);
+
+    JsonObject getUser = bigTable.getUserFromDb("testKey");
+    bigTable.saveUrlInDb(url, shorturl);
+    bigTable.delUrlFromDb(url);
+
+    assertThat(bigTable.getUrlFromDb(url)).isNull();
   }
-}*/
+  }
+
