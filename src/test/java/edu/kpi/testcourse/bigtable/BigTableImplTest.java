@@ -2,26 +2,15 @@ package edu.kpi.testcourse.bigtable;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jose.shaded.json.parser.JSONParser;
 import com.nimbusds.jose.shaded.json.parser.ParseException;
-import edu.kpi.testcourse.Main;
-import edu.kpi.testcourse.model.Url;
-import edu.kpi.testcourse.model.User;
-import edu.kpi.testcourse.rest.UrlsController;
 import edu.kpi.testcourse.rest.UsersController;
-import edu.kpi.testcourse.logic.UrlAndUserActions;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import javax.validation.constraints.NotNull;
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -118,9 +107,12 @@ class BigTableImplTest {
     userObject.add("userLinks", new JsonArray());
     bigTable.saveUserInDb("testKey", userObject);
 
-    JsonObject getUser = bigTable.getUserFromDb("testKey");
+    bigTable.getUserFromDb("testKey");
     bigTable.saveUrlInDb(url, shorturl);
     bigTable.delUrlFromDb(url);
+
+    assertThat(bigTable.getUrlFromDb(url)).isNull();
+  }
 
   @Test
   void checkUserInDataBase() {
@@ -135,31 +127,22 @@ class BigTableImplTest {
     userObject.addProperty("password", password);
     userObject.add(link, new JsonArray());
 
-    /* Saving and getting user from db */
     bigTable.saveUserInDb(key, userObject);
     JsonObject getUser = bigTable.getUserFromDb(key);
 
-    /* Comparing saved user and user that we get from the db */
-    System.out.println(getUser);
     assertThat(getUser).isEqualTo(userObject);
   }
 
-    assertThat(bigTable.getUrlFromDb(url)).isNull();
   @Test
   void checkUrlInDataBase() {
     BigTableImpl bigTable = new BigTableImpl();
     String key = genData("key");
     String link = genData("link");
 
-    /* Saving and getting url from db */
     bigTable.saveUrlInDb(key, link);
     String getUrl = bigTable.getUrlFromDb(key);
 
-    /* Comparing saved url and url that we get from the db */
     assertThat(getUrl).isEqualTo(link);
   }
-  }
-
-
 }
 
