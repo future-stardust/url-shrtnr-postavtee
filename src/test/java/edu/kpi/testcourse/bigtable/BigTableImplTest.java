@@ -6,12 +6,22 @@ import com.google.gson.JsonParser;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jose.shaded.json.parser.JSONParser;
 import com.nimbusds.jose.shaded.json.parser.ParseException;
+import edu.kpi.testcourse.Main;
+import edu.kpi.testcourse.model.Url;
+import edu.kpi.testcourse.model.User;
+import edu.kpi.testcourse.rest.UrlsController;
 import edu.kpi.testcourse.rest.UsersController;
+import edu.kpi.testcourse.logic.UrlAndUserActions;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import javax.validation.constraints.NotNull;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -43,23 +53,35 @@ class BigTableImplTest {
 
     StringBuilder sb = new StringBuilder();
 
-    if (dataType.equals("email")) {
-      int atRange = new Random().ints(2, length - 3).findAny().orElse(0);
-      int dotRange = new Random().ints(atRange + 2, length - 1).findAny().orElse(0);
+    switch (dataType) {
+      case "email":
+        int atRange = new Random().ints(2, length - 3).findAny().orElse(0);
+        int dotRange = new Random().ints(atRange + 2, length - 1).findAny().orElse(0);
 
-      for (int i = 0; i < length; i++) {
-        if (i == atRange) {
-          sb.append("@");
-        } else if (i == dotRange) {
-          sb.append(".");
-        } else {
+        for (int i = 0; i < length; i++) {
+          if (i == atRange) {
+            sb.append("@");
+          } else if (i == dotRange) {
+            sb.append(".");
+          } else {
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+          }
+        }
+        break;
+
+      case "password":
+      case "key":
+        for (int i = 0; i < length; i++) {
           sb.append(AB.charAt(rnd.nextInt(AB.length())));
         }
-      }
-    } else if (dataType.equals("password")) {
+        break;
 
-      for (int i = 0; i < length; i++)
-        sb.append(AB.charAt(rnd.nextInt(AB.length())));
+      case "link":
+        sb.append("https://");
+        for (int i = 0; i < length; i++) {
+          sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        }
+        break;
     }
 
     return sb.toString();
@@ -100,7 +122,44 @@ class BigTableImplTest {
     bigTable.saveUrlInDb(url, shorturl);
     bigTable.delUrlFromDb(url);
 
+  @Test
+  void checkUserInDataBase() {
+    JsonObject userObject = new JsonObject();
+    BigTableImpl bigTable = new BigTableImpl();
+    String email = genData("email");
+    String password = genData("password");
+    String key = genData("key");
+    String link = genData("link");
+
+    userObject.addProperty("email", email);
+    userObject.addProperty("password", password);
+    userObject.add(link, new JsonArray());
+
+    /* Saving and getting user from db */
+    bigTable.saveUserInDb(key, userObject);
+    JsonObject getUser = bigTable.getUserFromDb(key);
+
+    /* Comparing saved user and user that we get from the db */
+    System.out.println(getUser);
+    assertThat(getUser).isEqualTo(userObject);
+  }
+
     assertThat(bigTable.getUrlFromDb(url)).isNull();
+  @Test
+  void checkUrlInDataBase() {
+    BigTableImpl bigTable = new BigTableImpl();
+    String key = genData("key");
+    String link = genData("link");
+
+    /* Saving and getting url from db */
+    bigTable.saveUrlInDb(key, link);
+    String getUrl = bigTable.getUrlFromDb(key);
+
+    /* Comparing saved url and url that we get from the db */
+    assertThat(getUrl).isEqualTo(link);
   }
   }
+
+
+}
 
